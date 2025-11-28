@@ -1,0 +1,30 @@
+name: Deploy to Private Cloud
+
+# Trigger: Run this whenever code is pushed to the master branch
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build-and-deploy:
+    # CRITICAL: This tells GitHub to use YOUR server, not theirs!
+    runs-on: self-hosted
+
+    steps:
+    # Step 1: The robot downloads your code from GitHub
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: The robot rebuilds the Docker Image
+    - name: Build Docker Image
+      run: sudo docker build -t my-microservice .
+
+    # Step 3: The robot stops the old container (if running) and starts the new one
+    - name: Deploy Container
+      run: |
+        # Stop old container (ignore errors if it doesn't exist yet)
+        sudo docker stop my-app-container || true
+        sudo docker rm my-app-container || true
+        
+        # Run new container
+        sudo docker run -d -p 8080:80 --name my-app-container my-microservice
